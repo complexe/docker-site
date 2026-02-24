@@ -1,6 +1,61 @@
 <!doctype html>
-<html>
-  <body>
-    <h1>Hello depuis Docker 🚀</h1>
-  </body>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Docker + Supabase</title>
+  <style>
+    body{font-family:Arial;margin:40px;max-width:700px}
+    input,button{padding:10px;font-size:16px}
+    ul{padding-left:18px}
+    li{margin:6px 0}
+    .box{display:flex;gap:10px;margin:15px 0}
+  </style>
+</head>
+<body>
+  <h1>Mini app Supabase 🚀</h1>
+  <p>Ajoute un message → il est stocké dans Supabase (cloud).</p>
+
+  <div class="box">
+    <input id="msg" placeholder="Écris un message..." style="flex:1" />
+    <button id="btn">Ajouter</button>
+  </div>
+
+  <ul id="list"></ul>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const SUPABASE_URL = "https://psjdxtonxtsobfuelnff.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ylYb4RBZ_JeSRVN21fjXTA_8xVUpyF3"; // PAS la secret key
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function refresh() {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        document.getElementById("list").innerHTML = `<li>Erreur: ${error.message}</li>`;
+        return;
+      }
+      document.getElementById("list").innerHTML =
+        data.map(m => `<li>${m.content}</li>`).join("");
+    }
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      const content = document.getElementById("msg").value.trim();
+      if (!content) return;
+
+      const { error } = await supabase.from("messages").insert([{ content }]);
+      if (error) alert(error.message);
+      document.getElementById("msg").value = "";
+      refresh();
+    });
+
+    refresh();
+  </script>
+</body>
 </html>
